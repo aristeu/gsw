@@ -9,6 +9,7 @@
 import getopt
 import sys
 import gitlab
+import re
 
 """
 Parameters:
@@ -21,7 +22,7 @@ state       string      no          The state of the to do. Can be either pendin
 type        string      no          The type of to-do item. Can be either Issue, MergeRequest, DesignManagement::Design or AlertManagement::Alert
 
 """
-all_fields = ["id", "project_id", "project", "target_iid", "target_type", "target_state", "body", "target_title", "labels", "target_url"]
+all_fields = ["id", "project_id", "project", "full_project", "target_iid", "target_type", "target_state", "body", "target_title", "labels", "target_url"]
 direct_fields = [ "id", "target_type", "target_url", "body", "labels" ]
 def get_field(todo, field):
     # only MergeRequest supported for now
@@ -40,11 +41,13 @@ def get_field(todo, field):
         return todo.target['title']
     elif field == "target_state":
         return todo.target['state']
+    elif field == "full_project":
+        return re.sub(r'.*gitlab.com/(.*)/-/merge.*', r'\1', todo.target_url)
     return None
 
 # list ######
 def op_list(glab, opts, args):
-    fields = [ "id", "target_state", "project", "target_type", "target_iid", "target_title" ]
+    fields = [ "id", "target_state", "full_project", "target_type", "target_iid", "target_title" ]
 
     for option,value in opts:
         if option == '--fields' or option == '-f':
