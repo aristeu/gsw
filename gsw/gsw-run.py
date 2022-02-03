@@ -73,7 +73,7 @@ def main(cmd, argv):
     token = config['gitlab']['token']
 
     try:
-        glab = gitlab.Gitlab(url, private_token=token)
+        glab = gitlab.Gitlab(url, private_token=token, per_page=500)
     except Exception as err:
         raise Exception("Unable to connect to gitlab (%s)" % str(err))
 
