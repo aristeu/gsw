@@ -25,7 +25,7 @@ all_fields = ["id", "project_id", "project", "target_iid", "target_type", "targe
 direct_fields = [ "id", "target_type", "target_url", "body", "labels" ]
 def get_field(todo, field):
     # only MergeRequest supported for now
-    if todo.target_type is not "MergeRequest":
+    if str(todo.target_type) != "MergeRequest":
         return None
 
     if field in direct_fields:
@@ -92,24 +92,32 @@ def op_list(glab, opts, args):
     return 0
 
 def op_list_usage(f):
-    f.write("%s list [-f <fields>] [-h|--help]\n\n")
+    f.write("gsw todo list [-f <fields>] [-h|--help]\n\n")
     f.write("-f <fields>\t\tspecify which fields to show\n")
     f.write("-h|--help\t\tthis message\n\n")
     f.write("Available fields: %s\n" % ', '.join(all_fields))
 # list ######
 
+# done ######
+def op_done(glab, opts, args):
+    t = glab.todos.list(id = args[0])
+    t[0].mark_as_done()
+
+def op_done_usage(f):
+    f.write("gsw todo done <id>\n\n")
+    f.write("-h|--help\t\tthis message\n\n")
+# done ######
+
 MODULE_NAME = "todo"
-MODULE_OPERATIONS = { "list": op_list }
-MODULE_OPERATION_USAGE = { "list": op_list_usage }
-MODULE_OPERATION_SHORT_OPTIONS = { "list": "f:" }
-MODULE_OPERATION_LONG_OPTIONS = { "list": ["fields="] }
+MODULE_OPERATIONS = { "list": op_list, "done": op_done }
+MODULE_OPERATION_USAGE = { "list": op_list_usage, "done": op_done_usage }
+MODULE_OPERATION_SHORT_OPTIONS = { "list": "f:", "done": "" }
+MODULE_OPERATION_LONG_OPTIONS = { "list": ["fields="], "done": [] }
+MODULE_OPERATION_REQUIRED_ARGS = { "list": 0, "done": 1 }
 
 def list_operations(f):
     for op in MODULE_OPERATIONS:
         f.write("\t%s\n" % op)
-
-def usage(f):
-    f.write("fixme\n")
 
 def gsw_module_main(config, glab, argv):
     if len(argv) < 2:
@@ -132,12 +140,17 @@ def gsw_module_main(config, glab, argv):
     try:
         opts, args = getopt.getopt(argv[2:], short_options, long_options)
     except getopt.GetoptError as err:
-        print(err)
+        sys.stderr.write("%s\n" % err)
         MODULE_OPERATION_USAGE[operation](sys.stderr)
         sys.exit(2)
     for o,v in opts:
         if o == "-h" or o == "--help":
             MODULE_OPERATION_USAGE[operation](sys.stdout)
             sys.exit(0)
+    if len(args) < MODULE_OPERATION_REQUIRED_ARGS[operation]:
+        sys.stderr.write("Not enough arguments\n")
+        MODULE_OPERATION_USAGE[operation](sys.stderr)
+        sys.exit(2)
+
     return MODULE_OPERATIONS[operation](glab, opts, args)
 
