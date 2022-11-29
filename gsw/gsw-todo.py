@@ -48,6 +48,7 @@ def get_field(todo, field):
 # list ######
 def op_list(glab, opts, args):
     fields = [ "id", "target_state", "full_project", "target_type", "target_iid", "target_title" ]
+    target_state_filter = [ 'opened' ]
 
     for option,value in opts:
         if option == '--fields' or option == '-f':
@@ -58,6 +59,8 @@ def op_list(glab, opts, args):
                     op_list_usage(sys.stderr)
                     return 2
                 fields.append(o)
+        elif option == '--all' or option == '-a':
+            target_state_filter = None
         else:
             sys.stderr.write("Unknown option: %s\n" % option)
             usage(sys.stderr)
@@ -77,6 +80,8 @@ def op_list(glab, opts, args):
                         max_size[field] = len(str(field_value))
 
         for todo in todos:
+            if 'target_state' in fields and target_state_filter is not None and get_field(todo, 'target_state') not in target_state_filter:
+                continue
             output = []
             output_format = ""
             for field in fields:
@@ -97,6 +102,7 @@ def op_list(glab, opts, args):
 def op_list_usage(f):
     f.write("gsw todo list [-f <fields>] [-h|--help]\n\n")
     f.write("-f <fields>\t\tspecify which fields to show\n")
+    f.write("--all | -a\t\tlist all TODOs, including ones the MR was closed or merged\n")
     f.write("-h|--help\t\tthis message\n\n")
     f.write("Available fields: %s\n" % ', '.join(all_fields))
 # list ######
@@ -114,8 +120,8 @@ def op_done_usage(f):
 MODULE_NAME = "todo"
 MODULE_OPERATIONS = { "list": op_list, "done": op_done }
 MODULE_OPERATION_USAGE = { "list": op_list_usage, "done": op_done_usage }
-MODULE_OPERATION_SHORT_OPTIONS = { "list": "f:", "done": "" }
-MODULE_OPERATION_LONG_OPTIONS = { "list": ["fields="], "done": [] }
+MODULE_OPERATION_SHORT_OPTIONS = { "list": "f:a", "done": "" }
+MODULE_OPERATION_LONG_OPTIONS = { "list": ["fields=","all"], "done": [] }
 MODULE_OPERATION_REQUIRED_ARGS = { "list": 0, "done": 1 }
 
 def list_operations(f):
