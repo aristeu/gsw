@@ -111,8 +111,9 @@ def op_list_usage(f):
 
 # done ######
 def op_done(glab, opts, args):
-    t = glab.todos.list(id = args[0])
-    t[0].mark_as_done()
+#    t = glab.todos.list(id = args[0])
+#    t[0].mark_as_done()
+    glab.http_post("/todos/%s/mark_as_done" % args[0])
 
 def op_done_usage(f):
     f.write("gsw todo done <id>\n\n")
