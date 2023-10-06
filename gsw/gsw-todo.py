@@ -22,7 +22,7 @@ state       string      no          The state of the to do. Can be either pendin
 type        string      no          The type of to-do item. Can be either Issue, MergeRequest, DesignManagement::Design or AlertManagement::Alert
 
 """
-all_fields = ["id", "project_id", "project", "full_project", "target_iid", "target_type", "target_state", "body", "target_title", "labels", "target_url"]
+all_fields = ["id", "project_id", "project", "full_project", "target_iid", "target_type", "target_state", "body", "target_title", "labels", "target_url", "author" ]
 direct_fields = [ "id", "target_type", "target_url", "body", "labels" ]
 def get_field(todo, field):
     # only MergeRequest supported for now
@@ -43,11 +43,13 @@ def get_field(todo, field):
         return todo.target['state']
     elif field == "full_project":
         return re.sub(r'.*gitlab.com/(.*)/-/merge.*', r'\1', todo.target_url)
+    elif field == "author":
+        return todo.target['author']['username']
     return None
 
 # list ######
 def op_list(glab, opts, args):
-    fields = [ "id", "target_state", "full_project", "target_type", "target_iid", "target_title" ]
+    fields = [ "id", "author", "target_state", "full_project", "target_type", "target_iid", "target_title" ]
     target_state_filter = [ 'opened' ]
 
     for option,value in opts:
