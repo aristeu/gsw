@@ -13,7 +13,7 @@ import os
 # list ######
 def op_list(glab, opts, args):
     for i in glab.groups.list():
-        print(i.name)
+        print("%i\t%s" % (i.id, i.name))
 
 def op_list_usage(f):
     f.write("gsw %s list [-h|--help]\n\n" % MODULE_NAME)
