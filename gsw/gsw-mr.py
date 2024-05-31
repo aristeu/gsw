@@ -31,6 +31,7 @@ def op_list(glab, opts, args):
     options = { 'state': "opened" }
 
     group = None
+    draft = False
     for option,value in opts:
         if option == '-a' or option == '--author':
             options['author_username'] = value
@@ -38,6 +39,8 @@ def op_list(glab, opts, args):
                 options['scope'] = "all"
         if option == '-g' or option == '--group':
             group = value
+        if option == '-d' or option == '--draft':
+            draft = True
 
     # cache projects if it's in the list
     project_map = {}
@@ -54,6 +57,8 @@ def op_list(glab, opts, args):
     for i in results:
         first = True
         line = []
+        if draft == False and i.draft == True:
+            continue
         for f in default_fields:
             if f == 'author':
                 line.append("%s" % str(i.attributes[f]['username']))
@@ -76,15 +81,15 @@ def op_list(glab, opts, args):
     return 0
 
 def op_list_usage(f):
-    f.write("%s list [-a <author> | -g <group>] [-f <fields>] [-h|--help]\n\n")
+    f.write("%s list [-a <author> | -g <group>] [-f <fields>] [--draft] [-h|--help]\n\n")
     f.write("-h|--help\t\tthis message\n")
 # list ######
 
 MODULE_NAME = "mr"
 MODULE_OPERATIONS = { "list": op_list }
 MODULE_OPERATION_USAGE = { "list": op_list_usage }
-MODULE_OPERATION_SHORT_OPTIONS = { "list": "f:a:g:" }
-MODULE_OPERATION_LONG_OPTIONS = { "list": ["fields=", "author=", "group="] }
+MODULE_OPERATION_SHORT_OPTIONS = { "list": "f:a:g:d" }
+MODULE_OPERATION_LONG_OPTIONS = { "list": ["fields=", "author=", "group=", "draft"] }
 MODULE_OPERATION_REQUIRED_ARGS = { "list": 0 }
 
 def list_operations(f):
