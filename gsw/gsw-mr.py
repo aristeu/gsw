@@ -23,7 +23,7 @@ fields = ['id', 'iid', 'project_id', 'title', 'description', 'state', 'created_a
 
 soft_fields = [ 'project' ]
 
-default_fields = [ 'project', 'iid', 'author', 'title', 'blocking_discussions_resolved', 'labels' ]
+default_fields = [ 'project', 'iid', 'merge_status', 'author', 'title', 'blocking_discussions_resolved', 'labels' ]
 
 def op_list(glab, opts, args):
     lines = []
