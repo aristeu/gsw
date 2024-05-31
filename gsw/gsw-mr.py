@@ -30,11 +30,14 @@ def op_list(glab, opts, args):
 
     options = { 'state': "opened" }
 
+    group = None
     for option,value in opts:
         if option == '-a' or option == '--author':
             options['author_username'] = value
             if 'scope' not in options:
                 options['scope'] = "all"
+        if option == '-g' or option == '--group':
+            group = value
 
     # cache projects if it's in the list
     project_map = {}
@@ -42,7 +45,13 @@ def op_list(glab, opts, args):
         for p in glab.projects.list():
             project_map[p.id] = p.name
 
-    for i in glab.mergerequests.list(**options):
+    if group:
+        g = glab.groups.get(group)
+        results = g.mergerequests.list()
+    else:
+        results = glab.mergerequests.list(**options)
+
+    for i in results:
         first = True
         line = []
         for f in default_fields:
@@ -67,15 +76,15 @@ def op_list(glab, opts, args):
     return 0
 
 def op_list_usage(f):
-    f.write("%s list [-h|--help]\n\n")
+    f.write("%s list [-a <author> | -g <group>] [-f <fields>] [-h|--help]\n\n")
     f.write("-h|--help\t\tthis message\n")
 # list ######
 
 MODULE_NAME = "mr"
 MODULE_OPERATIONS = { "list": op_list }
 MODULE_OPERATION_USAGE = { "list": op_list_usage }
-MODULE_OPERATION_SHORT_OPTIONS = { "list": "f:a:" }
-MODULE_OPERATION_LONG_OPTIONS = { "list": ["fields=", "author="] }
+MODULE_OPERATION_SHORT_OPTIONS = { "list": "f:a:g:" }
+MODULE_OPERATION_LONG_OPTIONS = { "list": ["fields=", "author=", "group="] }
 MODULE_OPERATION_REQUIRED_ARGS = { "list": 0 }
 
 def list_operations(f):
