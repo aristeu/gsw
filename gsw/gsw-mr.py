@@ -28,13 +28,21 @@ default_fields = [ 'project', 'iid', 'author', 'title', 'blocking_discussions_re
 def op_list(glab, opts, args):
     lines = []
 
+    options = { 'state': "opened" }
+
+    for option,value in opts:
+        if option == '-a' or option == '--author':
+            options['author_username'] = value
+            if 'scope' not in options:
+                options['scope'] = "all"
+
     # cache projects if it's in the list
     project_map = {}
     if 'project' in default_fields:
         for p in glab.projects.list():
             project_map[p.id] = p.name
 
-    for i in glab.mergerequests.list(state="opened"):
+    for i in glab.mergerequests.list(**options):
         first = True
         line = []
         for f in default_fields:
@@ -66,8 +74,8 @@ def op_list_usage(f):
 MODULE_NAME = "mr"
 MODULE_OPERATIONS = { "list": op_list }
 MODULE_OPERATION_USAGE = { "list": op_list_usage }
-MODULE_OPERATION_SHORT_OPTIONS = { "list": "f:" }
-MODULE_OPERATION_LONG_OPTIONS = { "list": ["fields="] }
+MODULE_OPERATION_SHORT_OPTIONS = { "list": "f:a:" }
+MODULE_OPERATION_LONG_OPTIONS = { "list": ["fields=", "author="] }
 MODULE_OPERATION_REQUIRED_ARGS = { "list": 0 }
 
 def list_operations(f):
