@@ -19,7 +19,7 @@ def is_filtered(filter_list, item):
 
 # list ######
 
-fields = ['id', 'iid', 'project_id', 'title', 'description', 'state', 'created_at', 'updated_at', 'merged_by', 'username', 'name', 'state', 'locked', 'avatar_url', 'web_url', 'merge_user', 'merged_at', 'closed_by', 'closed_at', 'target_branch', 'source_branch', 'user_notes_count', 'upvotes', 'downvotes', 'author', 'assignees', 'assignee', 'reviewers', 'source_project_id', 'target_project_id', 'labels', 'draft', 'work_in_progress', 'milestone', 'merge_when_pipeline_succeeds', 'merge_status', 'detailed_merge_status', 'sha', 'merge_commit_sha', 'squash_commit_sha', 'discussion_locked', 'should_remove_source_branch', 'force_remove_source_branch', 'prepared_at', 'allow_collaboration', 'allow_maintainer_to_push', 'reference', 'references', 'web_url', 'time_stats', 'squash', 'squash_on_merge', 'task_completion_status', 'has_conflicts', 'blocking_discussions_resolved', 'approvals_before_merge' ]
+available_fields = ['id', 'iid', 'project_id', 'title', 'description', 'state', 'created_at', 'updated_at', 'merged_by', 'username', 'name', 'state', 'locked', 'avatar_url', 'web_url', 'merge_user', 'merged_at', 'closed_by', 'closed_at', 'target_branch', 'source_branch', 'user_notes_count', 'upvotes', 'downvotes', 'author', 'assignees', 'assignee', 'reviewers', 'source_project_id', 'target_project_id', 'labels', 'draft', 'work_in_progress', 'milestone', 'merge_when_pipeline_succeeds', 'merge_status', 'detailed_merge_status', 'sha', 'merge_commit_sha', 'squash_commit_sha', 'discussion_locked', 'should_remove_source_branch', 'force_remove_source_branch', 'prepared_at', 'allow_collaboration', 'allow_maintainer_to_push', 'reference', 'references', 'web_url', 'time_stats', 'squash', 'squash_on_merge', 'task_completion_status', 'has_conflicts', 'blocking_discussions_resolved', 'approvals_before_merge' ]
 
 soft_fields = [ 'project' ]
 
@@ -29,42 +29,41 @@ def op_list(glab, opts, args):
     lines = []
 
     options = { 'state': "opened" }
-
-    group = None
     draft = False
+    fields = default_fields
+
     for option,value in opts:
         if option == '-a' or option == '--author':
+            options['scope'] = "all"
             options['author_username'] = value
-            if 'scope' not in options:
-                options['scope'] = "all"
-        if option == '-g' or option == '--group':
-            group = value
         if option == '-d' or option == '--draft':
             draft = True
+        if option == '-l' or option == '--label':
+            options['labels'] = value.split(',')
+            options['scope'] = "all"
+        if option == '-f' or option == '--fields':
+            fields = []
+            for i in value.split(','):
+                if i not in available_fields:
+                    sys.stderr.write("Field %s not available. Available fields: %s\n" % (i, str(fields)))
+                    return 1
+                fields.append(i)
 
-    # cache projects if it's in the list
-    project_map = {}
-    if 'project' in default_fields:
-        for p in glab.projects.list():
-            project_map[p.id] = p.name
-
-    if group:
-        g = glab.groups.get(group)
-        results = g.mergerequests.list()
-    else:
-        results = glab.mergerequests.list(**options)
+    results = glab.mergerequests.list(**options)
+    if 'draft' not in fields:
+        fields.append('draft')
 
     for i in results:
         first = True
         line = []
-        if draft == False and i.draft == True:
+        if i.draft == True and draft == False:
             continue
-        for f in default_fields:
+        for f in fields:
             if f == 'author':
                 line.append("%s" % str(i.attributes[f]['username']))
             elif f == 'labels':
                 labels = []
-                filtered_out = [ "OK", "Subsystem", "JIRA::InProgress", "readyForQA", "CodeChanged" ]
+                filtered_out = [ "OK", "Subsystem", "JIRA::InProgress", "CodeChanged" ]
                 for c in i.attributes[f]:
                     if not is_filtered(filtered_out, c):
                         labels.append(c)
@@ -81,15 +80,15 @@ def op_list(glab, opts, args):
     return 0
 
 def op_list_usage(f):
-    f.write("%s list [-a <author> | -g <group>] [-f <fields>] [--draft] [-h|--help]\n\n")
+    f.write("%s list [-a <author>] [-f <fields>] [--draft] [-l <label>[,<label>,...]] [-h|--help]\n\n")
     f.write("-h|--help\t\tthis message\n")
 # list ######
 
 MODULE_NAME = "mr"
 MODULE_OPERATIONS = { "list": op_list }
 MODULE_OPERATION_USAGE = { "list": op_list_usage }
-MODULE_OPERATION_SHORT_OPTIONS = { "list": "f:a:g:d" }
-MODULE_OPERATION_LONG_OPTIONS = { "list": ["fields=", "author=", "group=", "draft"] }
+MODULE_OPERATION_SHORT_OPTIONS = { "list": "f:a:dl:" }
+MODULE_OPERATION_LONG_OPTIONS = { "list": ["fields=", "author=", "draft", "labels="] }
 MODULE_OPERATION_REQUIRED_ARGS = { "list": 0 }
 
 def list_operations(f):
